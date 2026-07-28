@@ -2,5 +2,5 @@
 -r requirements.txt
 numpy==1.26.4
 shapely==2.0.3
-geopandas==0.14.3
+geopandas==1.1.2
 h5py==3.11.0
