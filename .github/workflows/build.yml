@@ -18,6 +18,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Enforce TypeScript stray-token sanitation
+        run: |
+          chmod +x scripts/lint-stray-tokens.sh
+          ./scripts/lint-stray-tokens.sh
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -28,14 +33,15 @@ jobs:
         run: npm ci
 
       - name: Run linter
-        run: npm run lint || true # Soft-fail while large TS files stabilize
+        # Soft-fail while large TS files stabilize
+        run: npm run lint
         continue-on-error: true
 
       - name: Build application
         run: npm run build
 
       - name: Build Docker Image
-        run: docker build -t web-app:latest . || true
+        run: docker build -t web-app:latest .
         continue-on-error: true
 
   python-engine:

@@ -23,25 +23,25 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
   const masterGainRef = useRef<GainNode | null>(null);
   const oscillatorsRef = useRef<{ osc: OscillatorNode; gain: GainNode }[]>([]);
   const filterRef = useRef<BiquadFilterNode | null>(null);
-  const lfoIntervalRef = useRef<any>(null);
-  const noiseNodeRef = useRef<AudioWorkletNode | ScriptProcessorNode | null>(null);
+  const lfoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // ScriptProcessor is deprecated but still the most portable path in sandboxed iframes.
+  // AudioWorklet migration is intentional backlog (needs separate worklet URL + CSP).
+  const noiseNodeRef = useRef<ScriptProcessorNode | null>(null);
 
   // Initialize Audio Context lazily
   const initAudio = () => {
     if (audioCtxRef.current) return;
 
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new AudioContextClass();
       audioCtxRef.current = ctx;
 
       const masterGain = ctx.createGain();
-      // Apply initial mute or volume
       masterGain.gain.setValueAtTime(isMuted ? 0 : volume * 0.25, ctx.currentTime);
       masterGain.connect(ctx.destination);
       masterGainRef.current = masterGain;
 
-      // Filter for warmth
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(350, ctx.currentTime);
@@ -60,15 +60,13 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
     const filter = filterRef.current;
     if (!ctx || !filter) return;
 
-    // Clear previous sound sources
     stopSoundSources();
 
     if (currentSoundscape === 'off') return;
 
-    // Set up notes based on soundscape
     const freqs = currentSoundscape === 'hydraulic'
-      ? [65.41, 130.81, 196.00, 261.63] // C2, C3, G3, C4 - Deep hydraulic drone
-      : [110.00, 164.81, 220.00, 293.66, 329.63]; // A2, E3, A3, D4, E4 - Warm family engineering harmony
+      ? [65.41, 130.81, 196.00, 261.63]
+      : [110.00, 164.81, 220.00, 293.66, 329.63];
 
     freqs.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
@@ -76,8 +74,6 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
 
       osc.type = currentSoundscape === 'hydraulic' ? 'triangle' : 'sine';
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      
-      // Detune slightly for spatial chorus effect
       osc.detune.setValueAtTime((idx - 2) * 5, ctx.currentTime);
 
       gain.gain.setValueAtTime(0, ctx.currentTime);
@@ -90,17 +86,14 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
       oscillatorsRef.current.push({ osc, gain });
     });
 
-    // Synthesize real water flow using Web Audio noise generator for real hydraulic experience
     try {
-      // ScriptProcessor is deprecated but universally supported across sandboxed browser frames
       const bufferSize = 4096;
+      // eslint-disable-next-line deprecation/deprecation -- portable fallback; AudioWorklet TBD
       const scriptNode = ctx.createScriptProcessor(bufferSize, 1, 1);
-      
+
       scriptNode.onaudioprocess = (e) => {
-        const outputBuffer = e.outputBuffer;
-        const channelData = outputBuffer.getChannelData(0);
+        const channelData = e.outputBuffer.getChannelData(0);
         for (let sample = 0; sample < bufferSize; sample++) {
-          // White noise
           channelData[sample] = Math.random() * 2.0 - 1.0;
         }
       };
@@ -111,7 +104,6 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
       noiseFilter.Q.setValueAtTime(1.2, ctx.currentTime);
 
       const noiseGain = ctx.createGain();
-      // Keep water rumble soft
       noiseGain.gain.setValueAtTime(0.015, ctx.currentTime);
 
       scriptNode.connect(noiseFilter);
@@ -120,16 +112,12 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
 
       noiseNodeRef.current = scriptNode;
 
-      // Modulate the water frequency to simulate river waves/flow dynamics
       let theta = 0;
       const modulationInterval = setInterval(() => {
         if (!ctx) return;
         theta += 0.05;
-        // Water filter sweeps slowly between 180Hz and 320Hz
         const noiseFreq = 250 + Math.sin(theta) * 70;
         noiseFilter.frequency.setTargetAtTime(noiseFreq, ctx.currentTime, 0.2);
-        
-        // Also modulate primary lowpass filter frequency slightly
         const primaryFilterFreq = 350 + Math.cos(theta * 0.4) * 80;
         filter.frequency.setTargetAtTime(primaryFilterFreq, ctx.currentTime, 0.4);
       }, 100);
@@ -151,14 +139,18 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
         osc.stop();
         osc.disconnect();
         gain.disconnect();
-      } catch (err) {}
+      } catch {
+        /* already stopped */
+      }
     });
     oscillatorsRef.current = [];
 
     if (noiseNodeRef.current) {
       try {
         noiseNodeRef.current.disconnect();
-      } catch (err) {}
+      } catch {
+        /* already disconnected */
+      }
       noiseNodeRef.current = null;
     }
   };
@@ -168,9 +160,8 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
     setIsMuted(prev => {
       const nextMuted = !prev;
       if (audioCtxRef.current && masterGainRef.current) {
-        // Resume AudioContext if suspended
         if (audioCtxRef.current.state === 'suspended') {
-          audioCtxRef.current.resume();
+          void audioCtxRef.current.resume();
         }
         masterGainRef.current.gain.setTargetAtTime(
           nextMuted ? 0 : volume * 0.25,
@@ -198,19 +189,17 @@ export function AudioSystemProvider({ children }: { children: ReactNode }) {
     setSoundscapeState(s);
   };
 
-  // Trigger soundscape changes
   useEffect(() => {
     if (audioCtxRef.current) {
       startSoundscape();
     }
   }, [currentSoundscape]);
 
-  // Clean up audio on unmount
   useEffect(() => {
     return () => {
       stopSoundSources();
       if (audioCtxRef.current) {
-        audioCtxRef.current.close();
+        void audioCtxRef.current.close();
       }
     };
   }, []);

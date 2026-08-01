@@ -1,0 +1,45 @@
+package replication
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"sync"
+)
+
+type VectorClock map[string]int
+
+type CausalEntry struct {
+	ChunkHash string
+	Clock     VectorClock
+	Payload   []byte
+}
+
+type Replica struct {
+	ID    string
+	Clock VectorClock
+	Mutex sync.Mutex
+	Log   []CausalEntry
+}
+
+func (r *Replica) Append(data []byte) CausalEntry {
+	r.Mutex.Lock()
+	defer r.Mutex.Unlock()
+	r.Clock[r.ID]++
+	entry := CausalEntry{ChunkHash: r.hashPayload(data), Clock: r.copyClock(), Payload: data}
+	r.Log = append(r.Log, entry)
+	return entry
+}
+
+func (r *Replica) copyClock() VectorClock {
+	c := make(VectorClock)
+	for k, v := range r.Clock {
+		c[k] = v
+	}
+	return c
+}
+
+func (r *Replica) hashPayload(data []byte) string {
+	h := sha256.New()
+	h.Write(data)
+	return hex.EncodeToString(h.Sum(nil))
+}

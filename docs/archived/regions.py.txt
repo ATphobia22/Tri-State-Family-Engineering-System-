@@ -1,0 +1,19 @@
+import re
+
+SIDE_EFFECT_PATTERNS = [
+    r"rm\s+", r"mv\s+", r"cp\s+", r"curl\s+", r"wget\s+", r"apt-get", r"yum", r"docker"
+]
+
+def is_side_effect(line: str) -> bool:
+    return any(re.search(p, line) for p in SIDE_EFFECT_PATTERNS)
+
+def partition_script(script: str):
+    recoverable, side_effects = [], []
+    for line in script.split("\n"):
+        if not line.strip():
+            continue
+        if is_side_effect(line):
+            side_effects.append(line)
+        else:
+            recoverable.append(line)
+    return recoverable, side_effects

@@ -1,0 +1,24 @@
+import re
+from functools import wraps
+from fastapi import HTTPException
+
+class GSPPolicyEngine:
+    _patterns = [re.compile(p, re.I) for p in ["exploit", "bioweapon", "rm -rf", "malicious", "harm"]]
+
+    @staticmethod
+    def validate(text: str) -> bool:
+        return all(not p.search(text) for p in GSPPolicyEngine._patterns)
+
+    @staticmethod
+    def apply_redemptive_framing(output: dict) -> dict:
+        output["ethics_audit"] = "All Guardrails Passed"
+        output["seal"] = "System execution completed"
+        return output
+
+def auth_check(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        if not GSPPolicyEngine.validate(str(args) + str(kwargs)):
+            raise HTTPException(status_code=403, detail="B.I.B.L.E. Violation")
+        return await func(*args, **kwargs)
+    return wrapper

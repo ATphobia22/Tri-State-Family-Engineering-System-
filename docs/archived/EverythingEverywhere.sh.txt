@@ -1,0 +1,15 @@
+#!/bin/bash
+# Tri-State bootstrap sample (catalog only — not executed by the twin runtime)
+set -e
+echo "INITIALIZING TRI-STATE NODE — Root: 13101 Bonebank Rd"
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  sudo apt-get update && sudo apt-get install -y docker.io python3-pip git
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  brew install docker python git
+fi
+
+pip3 install torch qiskit fastapi uvicorn
+git init --initial-branch=main || true
+docker-compose up --build -d || true
+echo "STATUS: NODE ACTIVE"
