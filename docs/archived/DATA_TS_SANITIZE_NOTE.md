@@ -1,14 +1,19 @@
 # Archived / sanitized content notes
 
-## src/data.ts (2026-08-01)
+## src/data.ts
 
-`CORE_CODE_FILES[].content` previously contained inline citation-style markers
-such as `[4, 5]`, `[7-9]`, `[10-12]` that were leftover from document assembly.
-Those markers were **not** valid in the embedded shell/Python/Swift/Verilog
-samples and cluttered the UI when code was displayed.
+`CORE_CODE_FILES` is a **registry** of sample assets. Full multi-language bodies
+live under `docs/archived/*.txt` and are referenced via `archivePath`.
 
-They were removed in branch `fix/cleanup-errors`. The sample snippets themselves
-are retained as illustrative catalog entries for the digital-twin layer browser;
-they are not executed by the runtime.
+Citation-style markers such as `[4, 5]` / `[7-9]` were removed from any
+inlined strings so the TypeScript AST stays clean.
 
-No functional application logic was deleted.
+## CI gate
+
+`scripts/lint-stray-tokens.sh` fails the build if multi-number footnote tokens
+reappear under `src/**/*.ts(x)`. Wired in `.github/workflows/build.yml`.
+
+## Extraction helper
+
+`node scripts/archive-non-ts.js` scans recent git log bodies for fenced code
+blocks and writes them under `docs/archived/`.

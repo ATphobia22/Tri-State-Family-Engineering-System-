@@ -1,0 +1,6 @@
+// Placeholder archive: gltfSceneLayers.ts
+// Geospatial coordinate mapping and layer definitions for high-fidelity 3D tiles.
+// Full implementation remains outside the data catalog to protect the AST.
+
+export const SCENE_LAYER_NOTE =
+  "See MapComponent / MeshTerrainEngine for live layer wiring.";

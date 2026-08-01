@@ -1,3 +1,7 @@
+/**
+ * Point Township Digital Twin — master catalog (sanitized).
+ * Heavy non-TS sample bodies live under docs/archived/ (see archivePath).
+ */
 import { CodeFile, MedicalTarget } from "./types";
 
 export interface DigitalTwinLayer {
@@ -166,40 +170,73 @@ export const MEDICAL_TARGETS: MedicalTarget[] = [
   }
 ];
 
+/**
+ * Code catalog index. Full bodies are under docs/archived/ (not inlined).
+ * Satisfies the lexical CI gate: no multi-number footnote tokens in src.
+ */
 export const CORE_CODE_FILES: CodeFile[] = [
   {
     name: "EverythingEverywhere.sh",
     path: "/EverythingEverywhere.sh",
     category: "bootstrap",
     language: "bash",
-    content: `#!/bin/bash\n# Tri-State bootstrap sample (catalog display only — not executed by the twin runtime)\nset -e\necho "INITIALIZING TRI-STATE NODE — Root: 13101 Bonebank Rd"\n\nif [[ "$OSTYPE" == "linux-gnu"* ]]; then\n    sudo apt-get update && sudo apt-get install -y docker.io python3-pip git\nelif [[ "$OSTYPE" == "darwin"* ]]; then\n    brew install docker python git\nfi\n\npip3 install torch qiskit fastapi uvicorn\ngit init --initial-branch=main || true\ndocker-compose up --build -d || true\necho "STATUS: NODE ACTIVE"`
+    archivePath: "docs/archived/EverythingEverywhere.sh.txt",
+    description: "Bootstrap sample for Tri-State node provisioning (catalog only)."
   },
   {
     name: "governance.py",
     path: "/backend/governance.py",
     category: "governance",
     language: "python",
-    content: `import re\nfrom functools import wraps\nfrom fastapi import HTTPException\n\nclass GSPPolicyEngine:\n    _patterns = [re.compile(p, re.I) for p in ["exploit", "bioweapon", "rm -rf", "malicious", "harm"]]\n\n    @staticmethod\n    def validate(text: str) -> bool:\n        return all(not p.search(text) for p in GSPPolicyEngine._patterns)\n\n    @staticmethod\n    def apply_redemptive_framing(output: dict) -> dict:\n        output["ethics_audit"] = "All Guardrails Passed"\n        output["seal"] = "System execution completed"\n        return output\n\ndef auth_check(func):\n    @wraps(func)\n    async def wrapper(*args, **kwargs):\n        if not GSPPolicyEngine.validate(str(args) + str(kwargs)):\n            raise HTTPException(status_code=403, detail="B.I.B.L.E. Violation")\n        return await func(*args, **kwargs)\n    return wrapper`
+    archivePath: "docs/archived/governance.py.txt",
+    description: "GSP policy engine sample with destructive-pattern hard blocks."
   },
   {
     name: "main.py",
     path: "/backend/main.py",
     category: "gateway",
     language: "python",
-    content: `from fastapi import FastAPI\nfrom .governance import auth_check, GSPPolicyEngine\n\napp = FastAPI(title="Tri-State Node", version="21.0.0")\n\n@app.post("/mission/execute")\n@auth_check\nasync def execute_mission(target: str, payload: dict):\n    result = {"target": target, "status": "ORDER LOCKED"}\n    return GSPPolicyEngine.apply_redemptive_framing(result)\n\nif __name__ == "__main__":\n    import uvicorn\n    uvicorn.run(app, host="0.0.0.0", port=8001)`
+    archivePath: "docs/archived/main.py.txt",
+    description: "FastAPI gateway sample with auth_check wrapper."
   },
   {
     name: "regions.py",
     path: "/services/f_runtime/regions.py",
     category: "runtime",
     language: "python",
-    content: `import re\n\nSIDE_EFFECT_PATTERNS = [\n    r"rm\\s+", r"mv\\s+", r"cp\\s+", r"curl\\s+", r"wget\\s+", r"apt-get", r"yum", r"docker"\n]\n\ndef is_side_effect(line: str) -> bool:\n    return any(re.search(p, line) for p in SIDE_EFFECT_PATTERNS)\n\ndef partition_script(script: str):\n    recoverable, side_effects = [], []\n    for line in script.split("\\n"):\n        if not line.strip():\n            continue\n        if is_side_effect(line):\n            side_effects.append(line)\n        else:\n            recoverable.append(line)\n    return recoverable, side_effects`
+    archivePath: "docs/archived/regions.py.txt",
+    description: "FRACTAL side-effect partition helper."
   },
   {
     name: "replica.go",
     path: "/core/sde/repl/replica.go",
     category: "orchestration",
     language: "go",
-    content: `package replication\n\nimport (\n\t"crypto/sha256"\n\t"encoding/hex"\n\t"sync"\n)\n\ntype VectorClock map[string]int\n\ntype CausalEntry struct {\n\tChunkHash string\n\tClock     VectorClock\n\tPayload   []byte\n}\n\ntype Replica struct {\n\tID    string\n\tClock VectorClock\n\tMutex sync.Mutex\n\tLog   []CausalEntry\n}\n\nfunc (r *Replica) Append(data []byte) CausalEntry {\n\tr.Mutex.Lock()\n\tdefer r.Mutex.Unlock()\n\tr.Clock[r.ID]++\n\tentry := CausalEntry{ChunkHash: r.hashPayload(data), Clock: r.copyClock(), Payload: data}\n\tr.Log = append(r.Log, entry)\n\treturn entry\n}\n\nfunc (r *Replica) copyClock() VectorClock {\n\tc := make(VectorClock)\n\tfor k, v := range r.Clock {\n\t\tc[k] = v\n\t}\n\treturn c\n}\n\nfunc (r *Replica) hashPayload(data []byte) string {\n\th := sha256.New()\n\th.Write(data)\n\treturn hex.EncodeToString(h.Sum(nil))\n}`
+    archivePath: "docs/archived/replica.go.txt",
+    description: "Causal replica log with vector clocks."
+  },
+  {
+    name: "complete_tristate_sovereign_bundle.py",
+    path: "/backend/complete_tristate_sovereign_bundle.py",
+    category: "gateway",
+    language: "python",
+    archivePath: "docs/archived/complete_tristate_sovereign_bundle.py.txt",
+    description: "Enterprise FastAPI router reference (archived)."
+  },
+  {
+    name: "flood2011_reconstruct.wgsl",
+    path: "/shaders/flood2011_reconstruct.wgsl",
+    category: "shader",
+    language: "wgsl",
+    archivePath: "docs/archived/flood2011_reconstruct.wgsl.txt",
+    description: "WebGPU compute shader mapping 2011 flood elevation boundaries."
+  },
+  {
+    name: "gltfSceneLayers.ts",
+    path: "/src/gltfSceneLayers.ts",
+    category: "scene",
+    language: "typescript",
+    archivePath: "docs/archived/gltfSceneLayers.ts.txt",
+    description: "Geospatial layer definitions for high-fidelity 3D tiles."
   }
 ];

@@ -1,0 +1,6 @@
+// Placeholder archive: flood2011_reconstruct.wgsl
+// WebGPU compute shader mapping 2011 flood wave elevation boundaries.
+// Replace with full WGSL source when promoting to the render pipeline.
+
+// @compute @workgroup_size(8, 8)
+// fn main(@builtin(global_invocation_id) gid: vec3<u32>) { /* ... */ }

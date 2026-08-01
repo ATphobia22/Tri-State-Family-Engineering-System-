@@ -1,0 +1,14 @@
+from fastapi import FastAPI
+from .governance import auth_check, GSPPolicyEngine
+
+app = FastAPI(title="Tri-State Node", version="21.0.0")
+
+@app.post("/mission/execute")
+@auth_check
+async def execute_mission(target: str, payload: dict):
+    result = {"target": target, "status": "ORDER LOCKED"}
+    return GSPPolicyEngine.apply_redemptive_framing(result)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
