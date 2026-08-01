@@ -33,10 +33,15 @@ export interface MedicalTarget {
   smiles: string;
 }
 
+/** Catalog entry for code samples. Prefer archivePath over inlined content. */
 export interface CodeFile {
   name: string;
   path: string;
   category: string;
   language: string;
-  content: string;
+  /** Optional short display snippet (must be valid TS string; no footnote markers). */
+  content?: string;
+  /** Preferred: path under docs/archived/ for full sample body. */
+  archivePath?: string;
+  description?: string;
 }

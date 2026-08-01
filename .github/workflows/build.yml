@@ -18,6 +18,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Enforce TypeScript stray-token sanitation
+        run: |
+          chmod +x scripts/lint-stray-tokens.sh
+          ./scripts/lint-stray-tokens.sh
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
