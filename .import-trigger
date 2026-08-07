@@ -1,0 +1,5 @@
+# Import trigger
+
+This file was created to trigger the import workflow (scripts/import-repos.sh) via a push event on the chore/unify-repos branch.
+
+Timestamp: 2026-08-07T16:30:00Z
